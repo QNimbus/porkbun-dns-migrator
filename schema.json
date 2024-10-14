@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "patternProperties": {
+      "^[a-zA-Z0-9.-]+$": {
+        "type": "object",
+        "patternProperties": {
+          "^(A|AAAA|CNAME|MX|TXT|NS|SRV|NAPTR)$": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": { "type": "string" },
+                "ttl": { "type": "string", "pattern": "^[0-9]+$" },
+                "prio": { "type": "string", "pattern": "^[0-9]+$" },
+                "order": { "type": "string", "pattern": "^[0-9]+$" },
+                "preference": { "type": "string", "pattern": "^[0-9]+$" }
+              },
+              "required": ["content", "ttl"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  },
+  "minItems": 1
+}
