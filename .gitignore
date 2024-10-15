@@ -41,6 +41,8 @@ Thumbs.db
 *.json
 !schema.json
 .env
+*.txt
+!requirements.txt
 
 # Docker
 .docker/

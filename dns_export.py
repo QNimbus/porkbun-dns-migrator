@@ -5,7 +5,7 @@ import sys
 import tldextract
 
 
-def get_records(domain, record_types, raw_output=False):
+def get_records(domain, record_types, raw_output=False, keep_a_aaaa=False):
     """
     Retrieve DNS records for a given domain.
 
@@ -13,6 +13,7 @@ def get_records(domain, record_types, raw_output=False):
         domain (str): The domain name to query.
         record_types (list): List of record types to query.
         raw_output (bool): If True, return raw DNS data. If False, format the data.
+        keep_a_aaaa (bool): If True, keep A and AAAA records even when CNAME exists.
 
     Returns:
         dict: A dictionary containing DNS records, organized by record type.
@@ -57,11 +58,20 @@ def get_records(domain, record_types, raw_output=False):
                 ]
             else:
                 records[record_type] = [(str(rdata), answers.ttl) for rdata in answers]
-        except dns.resolver.NoAnswer:
-            pass
         except dns.resolver.NXDOMAIN:
-            print(f"Error: Domain {domain} does not exist.")
-            return {}
+            # Domain does not exist, skip it
+            continue
+        except dns.resolver.NoAnswer:
+            # No records of this type, just continue to the next type
+            continue
+        except Exception as e:
+            print(f"Error querying {record_type} records for {domain}: {str(e)}", file=sys.stderr)
+            continue
+
+    # Post-processing: Remove A and AAAA records if CNAME exists, unless keep_a_aaaa is True
+    if "CNAME" in records and not keep_a_aaaa:
+        records.pop("A", None)
+        records.pop("AAAA", None)
 
     return records
 
@@ -128,14 +138,19 @@ def print_usage():
     print("1. Export DNS records for one or more domains to stdout:")
     print(f"   python {sys.argv[0]} --domains example.com example.org")
     print(f"   python {sys.argv[0]} -d example.com example.org")
+    print(f"   echo 'example.com example.org' | python {sys.argv[0]}")
     print("\n2. Export DNS records to a file:")
     print(f"   python {sys.argv[0]} --domains example.com example.org -f output.json")
+    print(f"   echo 'example.com example.org' | python {sys.argv[0]} -f output.json")
     print("\n3. Increase verbosity:")
     print(f"   python {sys.argv[0]} --domains example.com example.org -v")
     print(f"   python {sys.argv[0]} --domains example.com example.org -vv")
+    print("\n4. Export all record types:")
     print(f"   python {sys.argv[0]} --domains example.com example.org --all")
-    print("\n4. Exclude specific record types:")
+    print("\n5. Exclude specific record types:")
     print(f"   python {sys.argv[0]} --domains example.com example.org --all --exclude NS SOA")
+    print("\n6. Keep A and AAAA records when CNAME exists:")
+    print(f"   python {sys.argv[0]} --domains example.com example.org --keep-a-aaaa")
     print("\nAdd --verbose or -v to any command for detailed output.")
 
 
@@ -171,6 +186,11 @@ def main():
         "-a", "--all", action="store_true", help="Export all record types"
     )
     parser.add_argument("--exclude", nargs="+", help="Record types to exclude from the output")
+    parser.add_argument(
+        "--keep-a-aaaa",
+        action="store_true",
+        help="Keep A and AAAA records even when CNAME exists",
+    )
     args = parser.parse_args()
 
     if args.help:
@@ -178,12 +198,20 @@ def main():
         print_usage()
         sys.exit(0)
 
-    if not args.domains:
-        print("Error: --domains/-d is required")
+    domains = args.domains
+    if not domains:
+        if sys.stdin.isatty():
+            print("Error: Please provide domains using --domains/-d or via stdin")
+            print_usage()
+            sys.exit(1)
+        else:
+            domains = sys.stdin.read().split()
+
+    if not domains:
+        print("Error: No domains provided")
         print_usage()
         sys.exit(1)
 
-    domains = args.domains
     output_file = args.file
     verbosity = args.verbose
     raw_output = args.raw
@@ -244,7 +272,7 @@ def main():
         if verbosity >= 1:
             print(f"Fetching DNS records for {domain}", file=sys.stderr)
 
-        records = get_records(domain, record_types, raw_output)
+        records = get_records(domain, record_types, raw_output, args.keep_a_aaaa)
 
         if verbosity >= 1:
             print(f"Raw records for {domain}: {records}", file=sys.stderr)

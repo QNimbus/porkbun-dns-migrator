@@ -4,19 +4,17 @@
   "items": {
     "type": "object",
     "patternProperties": {
-      "^[a-zA-Z0-9.-]+$": {
+      "^[a-zA-Z0-9._-]+$": {
         "type": "object",
         "patternProperties": {
-          "^(A|AAAA|CNAME|MX|TXT|NS|SRV|NAPTR)$": {
+          "^(A|AAAA|AFSDB|APL|CAA|CDNSKEY|CDS|CERT|CNAME|DHCID|DLV|DNAME|DNSKEY|DS|EUI48|EUI64|HINFO|HIP|IPSECKEY|KEY|KX|LOC|MX|NAPTR|NS|NSEC|NSEC3|NSEC3PARAM|PTR|RP|SIG|SMIMEA|SOA|SPF|SRV|SSHFP|SVCB|TLSA|TXT|URI|ZONEMD)$": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "content": { "type": "string" },
                 "ttl": { "type": "string", "pattern": "^[0-9]+$" },
-                "prio": { "type": "string", "pattern": "^[0-9]+$" },
-                "order": { "type": "string", "pattern": "^[0-9]+$" },
-                "preference": { "type": "string", "pattern": "^[0-9]+$" }
+                "prio": { "type": "string", "pattern": "^[0-9]+$" }
               },
               "required": ["content", "ttl"],
               "additionalProperties": false
@@ -26,7 +24,8 @@
         "additionalProperties": false
       }
     },
-    "additionalProperties": false
+    "additionalProperties": false,
+    "minProperties": 1
   },
   "minItems": 1
 }

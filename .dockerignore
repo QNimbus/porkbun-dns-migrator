@@ -48,6 +48,8 @@ Thumbs.db
 *.json
 !schema.json
 .env
+*.txt
+!requirements.txt
 
 # Temporary files
 *.tmp

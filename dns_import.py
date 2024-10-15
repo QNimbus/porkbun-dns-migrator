@@ -136,9 +136,9 @@ def create_record(domain, record, verbose=False):
         "ttl": record['ttl']
     }
 
-    # Set name as the subdomain or @ for root
+    # Set name as the full subdomain or @ for root
     if domain != root_domain:
-        payload['name'] = domain.split('.')[0]
+        payload['name'] = domain[:-len(root_domain)-1]  # Remove root domain and trailing dot
     else:
         payload['name'] = '@'
 
@@ -194,9 +194,9 @@ def update_record(domain, record_id, record, verbose=False):
         "ttl": record['ttl']
     }
 
-    # Set name as the subdomain or @ for root
+    # Set name as the full subdomain or @ for root
     if domain != root_domain:
-        payload['name'] = domain.split('.')[0]
+        payload['name'] = domain[:-len(root_domain)-1]  # Remove root domain and trailing dot
     else:
         payload['name'] = '@'
 
